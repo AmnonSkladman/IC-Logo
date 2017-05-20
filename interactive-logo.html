@@ -1,0 +1,185 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Javascript Logic</title>
+
+<!-- for CreateJS and ZIMjs http://zimjs.com - free to modify - Dan Zen 2016 -->
+<!-- see http://zimjs.com/code/frame.html for more templates and meta tags -->
+
+<script>var zon = true; // true for comments from zim code</script>
+<script src="https://code.createjs.com/createjs-2015.11.26.min.js"></script>
+<script src="https://d309knd7es5f10.cloudfront.net/zim_5.js"></script>
+<!-- use zimjs.com/code/distill for minified individual functions! -->
+<!-- or can go to createjs.com for individual modules -->
+
+<style>
+	body {margin:0px; padding:0px; background-image: url("_assets/skyline.jpg");}
+	#myCanvas {position:absolute; background-image: url("_assets/skyline.jpg");}
+</style>
+
+<script>
+
+// SCALING OPTIONS
+// scaling can have values as follows with full being the default
+// "fit"		sets canvas and stage to dimensions and scales to fit inside window size
+// "outside"	sets canvas and stage to dimensions and scales to fit outside window size
+// "full"		sets stage to window size with no scaling
+// "tagID"		add canvas to HTML tag of ID - set to dimensions if provided - no scaling
+
+var scaling = "fit"; // fit scales to fit the browser window while keeping the aspect ratio
+var width = 1920; // can go higher...
+var height = 1080;
+var frame = new zim.Frame(scaling, width, height); // see docs for more options and info
+
+
+frame.on("ready", function() {
+	zog("ready from ZIM Frame");
+
+	
+       var stage = frame.stage;
+	   var stageW = frame.width;
+	   var stageH = frame.height;
+
+	   // put your code here (you can delete this code)
+    
+    frame.loadAssets(["soundcloud.png",
+                      "note1.png",
+                      "note2.png",
+                      "note3.png",
+                      "BlueSwedeHookedOnAFeeling.mp3",
+                      "FeelGoodInc.mp3",
+                      "Molotov.mp3",
+                      "ThisGirl.mp3"
+                     ], "_assets/");
+
+    frame.on("complete", function () {
+
+	   var startButton = new zim.Button({width:150,
+								height:150,
+								label:"START",
+								color:"crimson",
+								corner:75,
+								rollColor:"#FF0049",
+								});
+        
+        startButton.center(stage);
+        
+       var cloud = frame.asset("soundcloud.png");
+		cloud.center(stage);
+        cloud.alpha = 0;
+        cloud.zindex = 50;
+        
+        var sound1 = frame.asset("BlueSwedeHookedOnAFeeling.mp3");
+        var sound2 = frame.asset("FeelGoodInc.mp3");
+        var sound3 = frame.asset("Molotov.mp3");
+        var sound4 = frame.asset("ThisGirl.mp3");
+        var songs = [sound1, sound2, sound3, sound4];
+        
+        var note1 = frame.asset("note1.png");
+        var note2 = frame.asset("note2.png");
+        var note3 = frame.asset("note3.png");
+        var notes = [note1, note2, note3];
+
+	
+	   startButton.on("click", function(){
+
+		  zim.animate(startButton, {
+					x: (stageW/2) - (startButton.width * 5),
+                    y: (stageH/2) - (startButton.height * 5),
+                    alpha:0,
+					scale:10,
+					fps:60,
+					}, 1000);
+            
+          zim.animate(cloud, {
+					alpha:1,
+					scale:1,
+					fps:60,
+//                    x:stageW/3,
+//                    y:stageH/4
+					}, 1000);
+           
+           
+           stage.update();
+			
+	   }); // end of  startButton click
+        
+        var rainDropBot;
+        var rainDropTop;
+        var rain = new zim.Container();
+        stage.addChildAt(rain, 0);
+        var storm = new zim.Container();
+        var hiddenTarget = new zim.Rectangle(stageW, 50, "blue");
+        stage.addChild(hiddenTarget);
+        hiddenTarget.alpha = 0;
+        hiddenTarget.x = 0;
+        hiddenTarget.y = stageH - hiddenTarget.height;
+        
+        var playMusic;
+        var playMusicResult;
+        
+        
+        function raining() {
+                    
+//                    rainDropBot = new zim.Circle(15, "skyblue");
+//                    rainDropTop = new zim.Triangle(21, 21, 21, "skyblue");
+//                    rainDropTop.y += rainDropBot.y-rainDropBot.height+9.5;
+                    //                    rain.addChild(rainDropTop);
+//                    rain.addChild(rainDropBot);
+                    var notesR = notes[zim.rand(notes.length-1)];
+                    rain.addChild(notesR);
+//                    storm.addChild(rain);
+                   // stage.addChildAt(rain, 0);
+                    notesR.x = zim.rand(cloud.x-50, cloud.x+400);
+                    notesR.y = cloud.y+150;
+                    zim.move(notesR, notesR.x, stageH-notesR.height/2, 1000, "bounceOut", hitTestRain);
+            
+                    
+                       
+        }; //end of raining
+        
+        var ticker;
+        var rainTest;
+        
+        function hitTestRain() {
+            zog(rain.numChildren);
+            for (var i = rain.numChildren-1; i >= 0; i--) {
+                rainTest = rain.getChildAt(i);
+                
+                if (rainTest.hitTestBounds(hiddenTarget)) {
+                        rain.removeChild(rainTest);
+                        stage.update();
+                };
+            };
+            
+        }; //end of hitTestRain
+        
+        zim.drag({obj: cloud, onTop:true, slide: true, slideSnap: true, slideDamp: 0.05, rect: new createjs.Rectangle(0,0,stageW-cloud.width, stageH-cloud.height) });
+        
+        cloud.on("mousedown", function() {
+            ticker = setInterval(raining, 100);
+                playMusic = songs[zim.rand(0, songs.length-1)];
+                playMusicResult = playMusic.play();
+            stage.update();  
+        }); // end of cloud click
+        
+        cloud.on("pressup", function() {
+            clearInterval(ticker);
+                playMusicResult.paused = true;
+            stage.update();
+        });
+
+	   stage.update(); // update the stage to see any changes
+        
+    }); // end of complete
+
+}); // end of ready
+</script>
+</head>
+
+<body>
+<!-- canvas with id="myCanvas" is made by zim Frame -->
+</body>
+</html>
